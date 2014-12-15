@@ -18,10 +18,14 @@
         <button type="button" id="addTowerButton">Add Tower</button>
         <button type="button" id="addBallButton">Add Ball</button>
     </div>
-    <script src="lib/three.min.js"></script>
-    <script src="lib/TrackballControls.js"></script>
-    <script src="lib/tween.min.js"></script>
-    <script>
+    <script type="text/javascript" src="libs/three.min.js"></script>
+    <script type="text/javascript" src="libs/TrackballControls.js"></script>
+    <script type="text/javascript" src="libs/tween.min.js"></script>
+    <script type="text/javascript" src="libs/physi.js"></script>
+    <script type="text/javascript">
+
+        Physijs.scripts.worker = 'libs/physijs_worker.js';
+        Physijs.scripts.ammo = '../libs/ammo.js';
 
         var camera, renderer, scene;
         var plane;
@@ -54,11 +58,12 @@
             controls.addEventListener('change', render);
 
             //Svet
-            scene = new THREE.Scene();
+            scene = new Physijs.Scene();
+            scene.setGravity(new THREE.Vector3(0,0,-10));
 
             var planeGeo = new THREE.PlaneGeometry(100, 100, 1, 1);
             var planeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
-            plane = new THREE.Mesh(planeGeo, planeMaterial);
+            plane = new Physijs.PlaneMesh(planeGeo, planeMaterial);
             plane.name = "plane";
             plane.receiveShadow = true;
             scene.add(plane)
@@ -85,18 +90,19 @@
 
         }
 
-
+        //Dodajanje zoge
         function addBall() {
             var ballGeometry = new THREE.SphereGeometry(1, 20, 20);
             var ballMaterial = new THREE.MeshPhongMaterial({color: 0xD8DAD9});
-            ball = new THREE.Mesh(ballGeometry, ballMaterial);
+            ball = new Physijs.SphereMesh(ballGeometry, ballMaterial, 10);
             ball.castShadow = true;
-            ball.position.z = 1;
-            initBallTween(ball);
+            ball.position.z = 10;
+            //initBallTween(ball);
             scene.add(ball);
             document.getElementById("addBallButton").disabled = true;
         }
 
+        //iniclizacija animacije zoge
         function initBallTween(ball) {
             var current = {x: 0};
             var update = function () {
@@ -187,6 +193,7 @@
             controls.update(delta);
             TWEEN.update();
             animateTowers();
+            scene.simulate();
             requestAnimationFrame( animate );
         }
 
