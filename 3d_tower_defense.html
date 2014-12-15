@@ -1,0 +1,198 @@
+<html>
+<head>
+    <title>3D Tower Defense</title>
+    <style>
+        body { margin: 0; }
+        canvas { width: 100%; height: 100% }
+        #tower {
+            text-align: center;
+            padding: 10px;
+            z-index: 10;
+            width: 100%;
+            position: absolute;
+        }
+    </style>
+</head>
+<body>
+    <div id="tower">
+        <button type="button" id="addTowerButton">Add Tower</button>
+        <button type="button" id="addBallButton">Add Ball</button>
+    </div>
+    <script src="lib/three.min.js"></script>
+    <script src="lib/TrackballControls.js"></script>
+    <script src="lib/tween.min.js"></script>
+    <script>
+
+        var camera, renderer, scene;
+        var plane;
+        var controls;
+        var stats;
+        var light;
+        var clock = new THREE.Clock();
+        var addTowerBoolean = false;
+        var towers = [];
+        var ball;
+
+        init();
+        animate();
+
+        document.getElementById("addTowerButton").onclick = function() {addTowerBoolean = true;}
+        document.getElementById("addBallButton").onclick = addBall;
+        document.addEventListener("mousedown", onDocumentMouseDown);
+
+        function init() {
+            //Kamera
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            //camera.position.x = 50;
+            camera.position.z = 50;
+            //camera.position.y = -50;
+            //camera.rotation.x=-0.5*Math.PI;
+
+            //Controls
+            controls = new THREE.TrackballControls(camera);
+            controls.rotateSpeed = 1.0;
+            controls.addEventListener('change', render);
+
+            //Svet
+            scene = new THREE.Scene();
+
+            var planeGeo = new THREE.PlaneGeometry(100, 100, 1, 1);
+            var planeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
+            plane = new THREE.Mesh(planeGeo, planeMaterial);
+            plane.name = "plane";
+            plane.receiveShadow = true;
+            scene.add(plane)
+            var axes = new THREE.AxisHelper(20);
+            scene.add(axes);
+
+
+            //Luci
+            light = new THREE.DirectionalLight( 0xffffff );
+            light.position.set( 100, 100, 100);
+            light.castShadow = true;
+            //light.target = plane;
+            scene.add( light );
+
+            camera.lookAt(scene.position);
+
+            //Renderer
+            renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setClearColor(0xeeeeee, 1.0);
+            renderer.shadowMapEnabled = true;
+            document.body.appendChild(renderer.domElement);
+            render();
+
+        }
+
+
+        function addBall() {
+            var ballGeometry = new THREE.SphereGeometry(1, 20, 20);
+            var ballMaterial = new THREE.MeshPhongMaterial({color: 0xD8DAD9});
+            ball = new THREE.Mesh(ballGeometry, ballMaterial);
+            ball.castShadow = true;
+            ball.position.z = 1;
+            initBallTween(ball);
+            scene.add(ball);
+            document.getElementById("addBallButton").disabled = true;
+        }
+
+        function initBallTween(ball) {
+            var current = {x: 0};
+            var update = function () {
+                ball.position.x = current.x;
+            }
+
+            var tweenHead = new TWEEN.Tween(current).to({x: 20}, 5000)
+                    .easing(TWEEN.Easing.Quadratic.InOut)
+                    .onUpdate(update);
+
+            var tweenBack = new TWEEN.Tween(current).to({x: -20}, 5000)
+                    .easing(TWEEN.Easing.Quadratic.InOut)
+                    .onUpdate(update);
+
+            tweenBack.chain(tweenHead);
+            tweenHead.chain(tweenBack);
+            tweenHead.start();
+        }
+
+        //Zgradi stolp in ga doda na sceno
+        function addTower(vector) {
+            if(addTowerBoolean == false) {
+                return;
+            }
+            //ustvari grupo
+            var towerGroup = new  THREE.Group();
+            towerGroup.position.x = vector.x;
+            towerGroup.position.y = vector.y;
+            towerGroup.position.z = 0 + 6;
+            towerGroup.rotation.x = 0.5 * Math.PI;
+
+            //spodni del stolpa
+            var base_texture = THREE.ImageUtils.loadTexture("assets/tower_base.gif")
+            var baseGeometry = new THREE.CylinderGeometry(3, 6, 12);
+            var baseMaterial = new THREE.MeshLambertMaterial();
+            baseMaterial.map = base_texture;
+            var base = new THREE.Mesh(baseGeometry, baseMaterial);
+            base.castShadow = true;
+
+            //top
+            var canon_texture = THREE.ImageUtils.loadTexture("assets/top.gif");
+            var topGeometry = new THREE.CylinderGeometry(1, 1, 5);
+            var topMaterial = new THREE.MeshPhongMaterial();
+            topMaterial.map = canon_texture;
+            var top = new THREE.Mesh(topGeometry, topMaterial);
+            top.name = "top";
+            top.position.y = 11;
+            top.rotation.x = 0.5 * Math.PI;
+            top.castShadow = true;
+
+            //zdruzi v grupo in doda na sceno
+            towerGroup.add(base);
+            towerGroup.add(top);
+            scene.add(towerGroup);
+            towers.push(towerGroup);
+            addTowerBoolean = false;
+        }
+
+        var projector = new THREE.Projector();
+        function onDocumentMouseDown(event) {
+            event.preventDefault();
+            var vector = new THREE.Vector3(
+                    (event.clientX / window.innerWidth ) * 2 - 1,
+                    -( event.clientY / window.innerHeight ) * 2 + 1,
+                    0.5);
+            projector.unprojectVector(vector, camera);
+            var raycaster = new THREE.Raycaster(camera.position,
+                    vector.sub(camera.position).normalize());
+            var intersects = raycaster.intersectObjects([plane]);
+            if (intersects.length > 0) {
+                addTower(intersects[0].point);
+            }
+        }
+
+        function animateTowers() {
+            towers.forEach(function(e) {
+                if (ball === undefined || ball === null) {
+                    return;
+                }
+                var top = e.getChildByName("top");
+                top.lookAt(new THREE.Vector3(ball.position.x, ball.position.y, ball.position.z));
+            });
+        }
+
+        function animate() {
+            render();
+            var delta = clock.getDelta();
+            controls.update(delta);
+            TWEEN.update();
+            animateTowers();
+            requestAnimationFrame( animate );
+        }
+
+        function render() {
+            renderer.render(scene, camera);
+        }
+    </script>
+</body>
+</html>
