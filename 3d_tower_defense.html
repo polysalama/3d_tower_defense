@@ -177,7 +177,7 @@
                     return;
                 }
                 var top = e.getChildByName("top");
-                top.lookAt(new THREE.Vector3(ball.position.x, ball.position.y, ball.position.z));
+                top.lookAt(ball.position);
             });
         }
 
