@@ -70,6 +70,13 @@
             var axes = new THREE.AxisHelper(20);
             scene.add(axes);
 
+            var loader = new THREE.JSONLoader();
+            loader.load("assets/kupola.json", function(geometry) {
+                var material = new THREE.MeshBasicMaterial();
+                var mesh = new THREE.Mesh(geometry, material);
+                scene.add(mesh)
+            });
+
 
             //Luci
             light = new THREE.DirectionalLight( 0xffffff );
@@ -95,8 +102,9 @@
             var ballGeometry = new THREE.SphereGeometry(1, 20, 20);
             var ballMaterial = new THREE.MeshPhongMaterial({color: 0xD8DAD9});
             ball = new Physijs.SphereMesh(ballGeometry, ballMaterial, 10);
+            //ball = new THREE.Mesh(ballGeometry, ballMaterial);
             ball.castShadow = true;
-            ball.position.z = 10;
+            ball.position.z = 35;
             //initBallTween(ball);
             scene.add(ball);
             document.getElementById("addBallButton").disabled = true;
@@ -106,6 +114,7 @@
         function initBallTween(ball) {
             var current = {x: 0};
             var update = function () {
+                ball.__dirtyPosition = true;
                 ball.position.x = current.x;
             }
 
@@ -153,13 +162,25 @@
             top.rotation.x = 0.5 * Math.PI;
             top.castShadow = true;
 
+
+            var range = new Physijs.SphereMesh(new THREE.SphereGeometry(20, 20 ,20),
+                                                new THREE.MeshBasicMaterial({wireframe: true}), 0);
+            range.name = "range";
+            range.addEventListener('collision', function(collided_with, linearVelocity, angularVelocity) {
+                console.log("TEST");
+            });
+
+
             //zdruzi v grupo in doda na sceno
             towerGroup.add(base);
             towerGroup.add(top);
             scene.add(towerGroup);
+            scene.add(range);
             towers.push(towerGroup);
             addTowerBoolean = false;
+
         }
+
 
         var projector = new THREE.Projector();
         function onDocumentMouseDown(event) {
@@ -182,7 +203,7 @@
                 if (ball === undefined || ball === null) {
                     return;
                 }
-                var top = e.getChildByName("top");
+                var top = e.getObjectByName("top");
                 top.lookAt(ball.position);
             });
         }
