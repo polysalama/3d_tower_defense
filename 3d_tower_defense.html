@@ -102,9 +102,12 @@
             var ballGeometry = new THREE.SphereGeometry(1, 20, 20);
             var ballMaterial = new THREE.MeshPhongMaterial({color: 0xD8DAD9});
             ball = new Physijs.SphereMesh(ballGeometry, ballMaterial, 10);
+            ball.addEventListener('collision', function(collided_with, linearVelocity, angularVelocity) {
+                console.log("TEST");
+            });
             //ball = new THREE.Mesh(ballGeometry, ballMaterial);
             ball.castShadow = true;
-            ball.position.z = 35;
+            ball.position.z = 50;
             //initBallTween(ball);
             scene.add(ball);
             document.getElementById("addBallButton").disabled = true;
@@ -163,20 +166,25 @@
             top.castShadow = true;
 
 
-            var range = new Physijs.SphereMesh(new THREE.SphereGeometry(20, 20 ,20),
-                                                new THREE.MeshBasicMaterial({wireframe: true}), 0);
-            range.name = "range";
+            var range = new Physijs.SphereMesh(new THREE.SphereGeometry(5, 20 ,20),
+                                                new THREE.MeshBasicMaterial({wireframe: true}), 5);
+
+            range.position.z = 10;
+
             range.addEventListener('collision', function(collided_with, linearVelocity, angularVelocity) {
                 console.log("TEST");
             });
+            //range._physijs.collision_flags = 4;
+            range.name = "range";
+
 
 
             //zdruzi v grupo in doda na sceno
             towerGroup.add(base);
             towerGroup.add(top);
-            scene.add(towerGroup);
+            //scene.add(towerGroup);
             scene.add(range);
-            towers.push(towerGroup);
+            //towers.push(towerGroup);
             addTowerBoolean = false;
 
         }
