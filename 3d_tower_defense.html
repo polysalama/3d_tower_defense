@@ -67,19 +67,19 @@
             scene.setGravity(new THREE.Vector3(0,0,-10));
 
 
-            /*var planeGeo = new THREE.PlaneGeometry(100, 100, 1, 1);
+            var planeGeo = new THREE.PlaneGeometry(100, 100, 1, 1);
             var planeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
             plane1 = new Physijs.PlaneMesh(planeGeo, planeMaterial);
             //plane.name = "plane";
             //plane1.receiveShadow = true;
-            scene.add(plane1)*/
+            scene.add(plane1)
             var axes = new THREE.AxisHelper(20);
             scene.add(axes)
 
             img = new Image();
             img.onload = addPlane;
             img.src = "assets/plane200.png"
-            //addTerrain();
+            addTerrain();
 
             /*var loader = new THREE.JSONLoader();
             loader.load("assets/kupola.json", function(geometry) {
@@ -178,7 +178,7 @@
             uniforms[ "tDiffuse" ].value = terrainTexture;
             uniforms[ "uDisplacementScale" ].value = 43;
 
-            var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms, lights: true, wireframe: false };
+            var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms, lights: true, wireframe: true };
             var planeMaterial = new THREE.ShaderMaterial( parameters );
 
             var planeGeo = new THREE.PlaneGeometry(150, 150, 150, 150);
