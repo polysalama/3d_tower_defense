@@ -160,7 +160,7 @@
             }
             geometry.computeFaceNormals();
             geometry.computeVertexNormals();
-            plane = new Physijs.HeightfieldMesh( geometry, material, 0);
+            plane = new Physijs.HeightfieldMesh( geometry, material, 0, 200 ,200);
             scene.add(plane);
             render();
             //plane.visible = false;
