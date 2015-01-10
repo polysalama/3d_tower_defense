@@ -14,7 +14,7 @@
     </style>
 </head>
 <body>
-    <div id="tower">
+    <div id="menu">
         <button type="button" id="addTowerButton">Add Tower</button>
         <button type="button" id="addBallButton">Add Ball</button>
     </div>
@@ -27,26 +27,31 @@
     <script type="text/javascript">
 
         Physijs.scripts.worker = 'libs/physijs_worker.js';
-        Physijs.scripts.ammo = '../libs/ammo.js';
+        Physijs.scripts.ammo = '../ammo_lib/ammo.js';
 
         var camera, renderer, scene;
         var plane;
         var controls;
         var stats;
         var light;
+        var hemiLight;
         var clock = new THREE.Clock();
         var addTowerBoolean = false;
         var towers = [];
-        var ball;
+        var enemies = [];
         var img;
         var uniforms
-        var plane1
 
         init();
         animate();
 
         document.getElementById("addTowerButton").onclick = function() {addTowerBoolean = true;}
-        document.getElementById("addBallButton").onclick = addBall;
+        document.getElementById("addBallButton").onclick = function() {
+            var enemy = new Enemy()
+            enemies.push(enemy);
+            scene.add(enemy.ball)
+            //enemy.initEnemyTween(enemy.ball)
+        };
         document.addEventListener("mousedown", onDocumentMouseDown);
 
         function init() {
@@ -59,6 +64,7 @@
 
             //Controls
             controls = new THREE.TrackballControls(camera);
+            controls.target.z = 10;
             controls.rotateSpeed = 1.0;
             controls.addEventListener('change', render);
 
@@ -67,14 +73,14 @@
             scene.setGravity(new THREE.Vector3(0,0,-5));
 
 
-            var planeGeo = new THREE.PlaneGeometry(100, 100, 1, 1);
+            /*var planeGeo = new THREE.PlaneGeometry(100, 100, 1, 1);
             var planeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff});
-            plane1 = new Physijs.PlaneMesh(planeGeo, planeMaterial);
+            plane = new Physijs.PlaneMesh(planeGeo, planeMaterial);
             //plane.name = "plane";
             //plane1.receiveShadow = true;
-            scene.add(plane1)
+            scene.add(plane)
             var axes = new THREE.AxisHelper(20);
-            scene.add(axes)
+            scene.add(axes)*/
 
             img = new Image();
             img.onload = addPlane;
@@ -94,10 +100,21 @@
             light = new THREE.DirectionalLight( 0xffffff );
             light.position.set( 100, 100, 100);
             light.castShadow = true;
+            light.shadowMapWidth = 2048;
+            light.shadowMapHeight = 2048;
             //light.target = plane;
             scene.add( light );
+            hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
+            hemiLight.color.setHSL( 0.6, 1, 0.6 );
+            hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
+            hemiLight.position.set( 0, 500, 0 );
+            hemiLight.shadowMapWidth = 2048;
+            hemiLight.shadowMapHeight = 2048;
+            scene.add( hemiLight );
 
-            ambientLight = new THREE.AmbientLight( 0xffffff );
+            var ambientLight = new THREE.AmbientLight( 0xffffff );
+            ambientLight.shadowMapWidth = 2048;
+            ambientLight.shadowMapHeight = 2048;
             scene.add( ambientLight );
 
             camera.lookAt(scene.position);
@@ -149,9 +166,12 @@
             var data = getHeightData(img,0.5);
 
             // plane
-            var geometry = new THREE.PlaneGeometry(150,150,200,200);
-            var texture = THREE.ImageUtils.loadTexture( 'assets/plane201.png' );
-            var material = new THREE.MeshLambertMaterial( { map: texture, wireframe: true } );
+            var geometry = new THREE.PlaneGeometry(500,500,200,200);
+            var texture = new THREE.ImageUtils.loadTexture("assets/trava.png");
+            var material = new THREE.MeshLambertMaterial( { map: texture, wireframe: false } );
+            material.wrapAround = true;
+            material.map.repeat.set(20, 20);
+            material.map.wrapS = material.map.wrapT = THREE.RepeatWrapping;
             //plane = new Physijs.PlaneMesh( geometry, material );
 
             //set height of vertices
@@ -161,53 +181,46 @@
             geometry.computeFaceNormals();
             geometry.computeVertexNormals();
             plane = new Physijs.HeightfieldMesh( geometry, material, 0, 200 ,200);
+            plane.castShadow = true;
+            plane.receiveShadow = true;
+            plane.receiveShadow = true;
             scene.add(plane);
             render();
-            //plane.visible = false;
         }
 
         function addTerrain() {
             var terrainTexture = new THREE.ImageUtils.loadTexture("assets/surface_test.png");
+            var grassTexture = new THREE.ImageUtils.loadTexture("assets/trava.png");
 
-            shader = THREE.ShaderLib[ "normalmap" ];
+            var shader = THREE.ShaderLib[ "normalmap" ];
             uniforms = THREE.UniformsUtils.clone( shader.uniforms );
 
             uniforms[ "enableDisplacement" ].value = true;
             uniforms[ "enableDiffuse" ].value = true;
             uniforms[ "tDisplacement" ].value = terrainTexture;
-            uniforms[ "tDiffuse" ].value = terrainTexture;
+            uniforms[ "tDiffuse" ].value = grassTexture;
+            uniforms["wrapRGB"].value= new THREE.Vector3(10,10,10);
             uniforms[ "uDisplacementScale" ].value = 43;
+            uniforms[ "uRepeat" ].value = new THREE.Vector2(2,2);
+            //uniforms["tDiffuse"].value.repeat = new THREE.Vector2(2,2)
+
 
             var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms, lights: true, wireframe: false };
             var planeMaterial = new THREE.ShaderMaterial( parameters );
+            //planeMaterial.map = grassTexture;
 
-            var planeGeo = new THREE.PlaneGeometry(250, 250, 150, 150);
+            var planeGeo = new THREE.PlaneGeometry(500, 500, 400, 400);
             planeGeo.computeTangents(); /**/
+            planeGeo.computeFaceNormals();
+            planeGeo.computeVertexNormals();
 
             //var planeMaterial = new THREE.MeshLambertMaterial({color: 0xffffff}); /**/
 
             var terrain = new THREE.Mesh(planeGeo, planeMaterial);
             terrain.name = "terrain";
             terrain.receiveShadow = true;
+            terrain.castShadow = true;
             scene.add(terrain);
-        }
-        //Dodajanje zoge
-        function addBall() {
-            var ballGeometry = new THREE.SphereGeometry(1, 20, 20);
-            var ballMaterial = new THREE.MeshBasicMaterial({color: 0xff0000});
-            ball = new Physijs.SphereMesh(ballGeometry, ballMaterial, 10);
-            /*ball.addEventListener('collision', function(collided_with, linearVelocity, angularVelocity) {
-                console.log("TEST");
-            });*/
-            //ball = new THREE.Mesh(ballGeometry, ballMaterial);
-            ball.castShadow = true;
-            ball.position.z = 35;
-            ball.addEventListener( 'collision', function( other_object, linear_velocity, angular_velocity ) {
-                console.log("sfag");
-            });
-            //initBallTween(ball);
-            scene.add(ball);
-            //document.getElementById("addBallButton").disabled = true;
         }
 
         //iniclizacija animacije zoge
@@ -231,61 +244,6 @@
             tweenHead.start();
         }
 
-        //Zgradi stolp in ga doda na sceno
-        function addTower(vector) {
-            if(addTowerBoolean == false) {
-                return;
-            }
-            //ustvari grupo
-            var towerGroup = new  THREE.Group();
-            towerGroup.position.x = vector.x;
-            towerGroup.position.y = vector.y;
-            towerGroup.position.z = vector.z + 6;
-            towerGroup.rotation.x = 0.5 * Math.PI;
-
-            //spodni del stolpa
-            var base_texture = THREE.ImageUtils.loadTexture("assets/tower_base.gif")
-            var baseGeometry = new THREE.CylinderGeometry(3, 6, 12);
-            var baseMaterial = new THREE.MeshLambertMaterial();
-            baseMaterial.map = base_texture;
-            var base = new THREE.Mesh(baseGeometry, baseMaterial);
-            base.castShadow = true;
-
-            //top
-            var canon_texture = THREE.ImageUtils.loadTexture("assets/top.gif");
-            var topGeometry = new THREE.CylinderGeometry(1, 1, 5);
-            var topMaterial = new THREE.MeshPhongMaterial();
-            topMaterial.map = canon_texture;
-            var top = new THREE.Mesh(topGeometry, topMaterial);
-            top.name = "top";
-            top.position.y = 11;
-            top.rotation.x = 0.5 * Math.PI;
-            top.castShadow = true;
-
-
-            //var range = new Physijs.SphereMesh(new THREE.SphereGeometry(5, 20 ,20),
-                       //                         new THREE.MeshBasicMaterial({wireframe: true}), 5);
-
-            //range.position.z = 10;
-
-            //range.addEventListener('collision', function(collided_with, linearVelocity, angularVelocity) {
-               // console.log("TEST");
-            //});
-            //range._physijs.collision_flags = 4;
-           // range.name = "range";
-
-
-
-            //zdruzi v grupo in doda na sceno
-            towerGroup.add(base);
-            towerGroup.add(top);
-            scene.add(towerGroup);
-            //scene.add(range);
-            //towers.push(towerGroup);
-            addTowerBoolean = false;
-
-        }
-
 
         var projector = new THREE.Projector();
         function onDocumentMouseDown(event) {
@@ -299,26 +257,43 @@
                     vector.sub(camera.position).normalize());
             var intersects = raycaster.intersectObjects([plane]);
             if (intersects.length > 0) {
-                addTower(intersects[0].point);
+                if(addTowerBoolean == true) {
+                    var tower = new Tower(intersects[0].point);
+                    towers.push(tower);
+                    tower.animateTower();
+                    addTowerBoolean = false;
+                }
             }
         }
 
-        function animateTowers() {
+        /*function animateTowers() {
             towers.forEach(function(e) {
-                if (ball === undefined || ball === null) {
+                if (e.enemiesIner.length == 0) {
                     return;
                 }
-                var top = e.getObjectByName("top");
-                top.lookAt(ball.position);
+                var i;
+                for(i in e.enemiesIner) {
+                    //console.log(e.enemiesIner[i]);
+                    var dist = e.range.position.distanceTo(e.enemiesIner[i].position);
+                    var tRange = e.range.geometry.parameters.radius;
+                    if(dist > tRange + 1) {
+                        e.enemiesIner.shift();
+                    }
+                }
+                if (e.enemiesIner.length != 0) {
+                    e.range.getObjectByName("towerGroup").getObjectByName("top").lookAt(e.enemiesIner[0].position);
+                }
+                //console.log("IN RANGE");
             });
-        }
+        }*/
+
+
 
         function animate() {
             render();
             var delta = clock.getDelta();
             controls.update(delta);
             TWEEN.update();
-            animateTowers();
             scene.simulate();
             requestAnimationFrame( animate );
         }
