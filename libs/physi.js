@@ -738,7 +738,7 @@ window.Physijs = (function() {
 
 				case 'slider':
 					marker = new THREE.Mesh(
-						new THREE.BoxGeometry( 10, 1, 1 ),
+						new THREE.CubeGeometry( 10, 1, 1 ),
 						new THREE.MeshNormalMaterial
 					);
 					marker.position.copy( constraint.positiona );
@@ -775,10 +775,6 @@ window.Physijs = (function() {
 		return constraint;
 	};
 
-	Physijs.Scene.prototype.onSimulationResume = function() {
-		this.execute( 'onSimulationResume', { } );
-	};
-
 	Physijs.Scene.prototype.removeConstraint = function( constraint ) {
 		if ( this._constraints[constraint.id ] !== undefined ) {
 			this.execute( 'removeConstraint', { id: constraint.id } );
@@ -798,7 +794,7 @@ window.Physijs = (function() {
 				object.children[i].updateMatrix();
 				object.children[i].updateMatrixWorld();
 
-				_temp_vector3_1.setFromMatrixPosition( object.children[i].matrixWorld );
+				_temp_vector3_1.getPositionFromMatrix( object.children[i].matrixWorld );
 				_quaternion_1.setFromRotationMatrix( object.children[i].matrixWorld );
 
 				object.children[i]._physijs.position_offset = {
