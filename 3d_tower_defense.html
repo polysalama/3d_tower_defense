@@ -59,10 +59,9 @@
         function init() {
             //Kamera
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            //camera.position.x = 50;
-            camera.position.z = 50;
-            //camera.position.y = -50;
-            //camera.rotation.x=-0.5*Math.PI;
+            camera.position.x = -17;
+            camera.position.y = -597;
+            camera.position.z = 227;
 
             //Controls
             controls = new THREE.TrackballControls(camera);
@@ -112,7 +111,7 @@
             ambientLight.shadowMapHeight = 2048;
             scene.add( ambientLight );
 
-            camera.lookAt(scene.position);
+
 
             //Renderer
             renderer = new THREE.WebGLRenderer();
@@ -165,7 +164,7 @@
             var texture = new THREE.ImageUtils.loadTexture("assets/grasslight-big.jpg");
             texture.repeat.set(20, 20);
             texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-            console.log(texture);
+            //console.log(texture);
             var meshMaterial = new THREE.MeshLambertMaterial( { map: texture, wireframe: false});
 
             //set height of vertices
@@ -326,7 +325,10 @@
         }
 
         makeEnemys = setInterval(function(){
-
+            if(enemies.length < 5) {
+                var enemy = new Enemy();
+                enemies.push(enemy);
+            }
         }, 5000);
 
         function animate() {

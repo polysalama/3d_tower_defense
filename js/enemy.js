@@ -10,13 +10,15 @@ function Enemy() {
         dir * Math.floor((Math.random() * 25) + 15),0)
     ball.addEventListener('collision', function(collided_with, linearVelocity, angularVelocity) {
         if(collided_with.name == "wall") {
-            console.log(collided_with);
+            //console.log(collided_with);
             var dir = 1;
-            if(Math.random() < 0.5) {
+            if (Math.random() < 0.5) {
                 dir = -1;
             }
-            direction = new THREE.Vector3(dir*direction.x,dir*direction.y,0);
-
+            direction = new THREE.Vector3(dir * direction.x, dir * direction.y, 0);
+        }
+        if(collided_with.name == "bullet"){
+            console.log(collided_with);
         }
      });
     //ball = new THREE.Mesh(ballGeometry, ballMaterial);

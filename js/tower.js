@@ -35,6 +35,7 @@ function Tower(vector) {
     topMaterial.map = canon_texture;
     var top = new Physijs.CapsuleMesh(topGeometry, topMaterial, 0);
     top.name = "top";
+    top.castShadow=true;
     //top.rotation.x = 0.5 * Math.PI
     top.position.y = 3;
     //top.position.x = -0.5;
@@ -127,7 +128,6 @@ function Tower(vector) {
         if (enemies.length == 0) {
             return;
         }
-        console.log("STRELAM");
         var bulletGeo = new THREE.SphereGeometry(1, 10, 10);
         var bulletMaterial = new THREE.MeshPhongMaterial({map: canon_texture});
         var bullet = new Physijs.SphereMesh(bulletGeo, bulletMaterial, 1)
@@ -139,6 +139,7 @@ function Tower(vector) {
         //bullet.position.z = vector.z + 15;
         bullets.push(bullet);
         bullet.name = "bullet"
+        bullet.castShadow=true;
         //var enemyDir = bullet.userData.position.normalize();
         var location = new THREE.Vector3(bullet.userData.position.x, bullet.userData.position.y, bullet.userData.position.z);
         //var enemyDir = location.normalize();
@@ -149,7 +150,7 @@ function Tower(vector) {
 
     //zdruzi v grupo in doda na sceno
     //towerGroup.add(base);
-    range.visible = true;
+    range.visible = false;
     scene.add(base);
     scene.add(range);
 
