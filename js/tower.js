@@ -41,7 +41,7 @@ function Tower(vector) {
     top.castShadow = true;
 
 
-    var range = new Physijs.SphereMesh(new THREE.SphereGeometry(20, 20 ,20),
+    var range = new Physijs.SphereMesh(new THREE.SphereGeometry(30, 20 ,20),
         new THREE.MeshBasicMaterial({wireframe: true}), 0);
 
     range.position.x = vector.x;
@@ -57,6 +57,23 @@ function Tower(vector) {
     });
     range._physijs.collision_flags = 4;
     // range.name = "range";
+
+    scene.addEventListener( 'update', function(){
+        if (enemies.length == 0) {
+            return;
+        }
+        var i;
+        for(i in enemies) {
+            var dist = range.position.distanceTo(enemies[i].position);
+            var tRange = range.geometry.parameters.radius;
+            if(dist > tRange + 3) {
+                enemies.shift();
+            }
+        }
+        if (enemies.length != 0) {
+            towerGroup.getObjectByName("top").lookAt(enemies[0].position);
+        }
+    });
 
     //zdruzi v grupo in doda na sceno
     towerGroup.add(base);
@@ -76,7 +93,7 @@ function Tower(vector) {
             for(i in enemies) {
                 var dist = range.position.distanceTo(enemies[i].position);
                 var tRange = range.geometry.parameters.radius;
-                if(dist > tRange + 1) {
+                if(dist > tRange + 3) {
                     enemies.shift();
                 }
             }

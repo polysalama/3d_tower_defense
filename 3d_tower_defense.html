@@ -3,7 +3,7 @@
     <title>3D Tower Defense</title>
     <style>
         body { margin: 0; }
-        canvas { width: 100%; height: 100% }
+        canvas { width: 100%; height: 100%;}
         #tower {
             text-align: center;
             padding: 10px;
@@ -14,14 +14,15 @@
     </style>
 </head>
 <body>
-    <div id="menu">
+    <div id="tower">
         <button type="button" id="addTowerButton">Add Tower</button>
         <button type="button" id="addBallButton">Add Ball</button>
     </div>
-    <script type="text/javascript" src="libs/three.min.js"></script>
+    <script type="text/javascript" src="libs/three.js"></script>
     <script type="text/javascript" src="libs/TrackballControls.js"></script>
     <script type="text/javascript" src="libs/tween.min.js"></script>
     <script type="text/javascript" src="libs/physi.js"></script>
+    <script type="text/javascript" src="libs/THREEx.WindowResize.js"></script>
     <script type="text/javascript" src="js/tower.js"></script>
     <script type="text/javascript" src="js/enemy.js"></script>
     <script type="text/javascript">
@@ -45,11 +46,11 @@
         init();
         animate();
 
-        document.getElementById("addTowerButton").onclick = function() {addTowerBoolean = true;}
+        document.getElementById("addTowerButton").onclick = function() {addTowerBoolean = true;};
         document.getElementById("addBallButton").onclick = function() {
-            var enemy = new Enemy()
+            var enemy = new Enemy();
             enemies.push(enemy);
-            scene.add(enemy.ball)
+
             //enemy.initEnemyTween(enemy.ball)
         };
         document.addEventListener("mousedown", onDocumentMouseDown);
@@ -86,23 +87,15 @@
             img.onload = addPlane;
             img.src = "assets/plane201.png"
             //addTerrain();
-            //addPlane();
-
-            /*var loader = new THREE.JSONLoader();
-            loader.load("assets/kupola.json", function(geometry) {
-                var material = new THREE.MeshBasicMaterial();
-                var mesh = new THREE.Mesh(geometry, material);
-                scene.add(mesh)
-            });*/
 
 
             //Luci
-            light = new THREE.DirectionalLight( 0xffffff );
-            light.position.set( 100, 100, 100);
+            light = new THREE.DirectionalLight( 0xffffff, 0.3 );
+            light.position.set( 50, 50, 50);
             light.castShadow = true;
             light.shadowMapWidth = 2048;
             light.shadowMapHeight = 2048;
-            //light.target = plane;
+            //light.target = plane.
             scene.add( light );
             hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
             hemiLight.color.setHSL( 0.6, 1, 0.6 );
@@ -112,7 +105,7 @@
             hemiLight.shadowMapHeight = 2048;
             scene.add( hemiLight );
 
-            var ambientLight = new THREE.AmbientLight( 0xffffff );
+            var ambientLight = new THREE.AmbientLight( 0xffffff , 0.2);
             ambientLight.shadowMapWidth = 2048;
             ambientLight.shadowMapHeight = 2048;
             scene.add( ambientLight );
@@ -127,7 +120,7 @@
             renderer.shadowMapEnabled = true;
             document.body.appendChild(renderer.domElement);
             render();
-
+            THREEx.WindowResize(renderer, camera);
         }
 
         function getHeightData(img,scale) {
@@ -167,12 +160,11 @@
 
             // plane
             var geometry = new THREE.PlaneGeometry(500,500,200,200);
-            var texture = new THREE.ImageUtils.loadTexture("assets/trava.png");
-            var material = new THREE.MeshLambertMaterial( { map: texture, wireframe: false } );
-            material.wrapAround = true;
-            material.map.repeat.set(20, 20);
-            material.map.wrapS = material.map.wrapT = THREE.RepeatWrapping;
-            //plane = new Physijs.PlaneMesh( geometry, material );
+            var texture = new THREE.ImageUtils.loadTexture("assets/grasslight-big.jpg");
+            texture.repeat.set(20, 20);
+            texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+            console.log(texture);
+            var meshMaterial = new THREE.MeshLambertMaterial( { map: texture, wireframe: false});
 
             //set height of vertices
             for ( var i = 0; i<geometry.vertices.length; i++ ) {
@@ -180,32 +172,31 @@
             }
             geometry.computeFaceNormals();
             geometry.computeVertexNormals();
-            plane = new Physijs.HeightfieldMesh( geometry, material, 0, 200 ,200);
+            geometry.computeTangents();
+            plane = new Physijs.HeightfieldMesh( geometry, meshMaterial, 0, 200 ,200);
             plane.castShadow = true;
             plane.receiveShadow = true;
             plane.receiveShadow = true;
+            //plane.visible = false;
             scene.add(plane);
             render();
         }
 
         function addTerrain() {
             var terrainTexture = new THREE.ImageUtils.loadTexture("assets/surface_test.png");
-            var grassTexture = new THREE.ImageUtils.loadTexture("assets/trava.png");
-
+            var grassTexture = new THREE.ImageUtils.loadTexture("assets/grasslight-big.jpg");
+            grassTexture.wrapS = grassTexture.wrapT = THREE.RepeatWrapping;
             var shader = THREE.ShaderLib[ "normalmap" ];
             uniforms = THREE.UniformsUtils.clone( shader.uniforms );
-
             uniforms[ "enableDisplacement" ].value = true;
             uniforms[ "enableDiffuse" ].value = true;
             uniforms[ "tDisplacement" ].value = terrainTexture;
             uniforms[ "tDiffuse" ].value = grassTexture;
-            uniforms["wrapRGB"].value= new THREE.Vector3(10,10,10);
-            uniforms[ "uDisplacementScale" ].value = 43;
-            uniforms[ "uRepeat" ].value = new THREE.Vector2(2,2);
-            //uniforms["tDiffuse"].value.repeat = new THREE.Vector2(2,2)
+            uniforms[ "uDisplacementScale" ].value = 48;
+            uniforms[ "uRepeat" ].value = new THREE.Vector2(20,20);
 
-
-            var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms, lights: true, wireframe: false };
+            var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader,
+                uniforms: uniforms, lights: true, shadows:true, wireframe: false };
             var planeMaterial = new THREE.ShaderMaterial( parameters );
             //planeMaterial.map = grassTexture;
 
@@ -220,6 +211,7 @@
             terrain.name = "terrain";
             terrain.receiveShadow = true;
             terrain.castShadow = true;
+            terrain.needsUpdate=true;
             scene.add(terrain);
         }
 
@@ -260,33 +252,11 @@
                 if(addTowerBoolean == true) {
                     var tower = new Tower(intersects[0].point);
                     towers.push(tower);
-                    tower.animateTower();
+                    //tower.animateTower();
                     addTowerBoolean = false;
                 }
             }
         }
-
-        /*function animateTowers() {
-            towers.forEach(function(e) {
-                if (e.enemiesIner.length == 0) {
-                    return;
-                }
-                var i;
-                for(i in e.enemiesIner) {
-                    //console.log(e.enemiesIner[i]);
-                    var dist = e.range.position.distanceTo(e.enemiesIner[i].position);
-                    var tRange = e.range.geometry.parameters.radius;
-                    if(dist > tRange + 1) {
-                        e.enemiesIner.shift();
-                    }
-                }
-                if (e.enemiesIner.length != 0) {
-                    e.range.getObjectByName("towerGroup").getObjectByName("top").lookAt(e.enemiesIner[0].position);
-                }
-                //console.log("IN RANGE");
-            });
-        }*/
-
 
 
         function animate() {
@@ -301,6 +271,7 @@
         function render() {
             renderer.render(scene, camera);
         }
+
     </script>
 </body>
 </html>
