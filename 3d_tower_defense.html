@@ -86,11 +86,12 @@
             img = new Image();
             img.onload = addPlane;
             img.src = "assets/plane201.png"
+            addBorder();
             //addTerrain();
 
 
             //Luci
-            light = new THREE.DirectionalLight( 0xffffff, 0.3 );
+            light = new THREE.DirectionalLight( 0xffffff, 0.1 );
             light.position.set( 50, 50, 50);
             light.castShadow = true;
             light.shadowMapWidth = 2048;
@@ -105,7 +106,7 @@
             hemiLight.shadowMapHeight = 2048;
             scene.add( hemiLight );
 
-            var ambientLight = new THREE.AmbientLight( 0xffffff , 0.2);
+            var ambientLight = new THREE.AmbientLight( 0xffffff , 0.01);
             ambientLight.shadowMapWidth = 2048;
             ambientLight.shadowMapHeight = 2048;
             scene.add( ambientLight );
@@ -182,6 +183,51 @@
             render();
         }
 
+        function addBorder() {
+            var ground_material = Physijs.createMaterial(
+                    new THREE.MeshPhongMaterial({ map: THREE.ImageUtils.loadTexture('assets/wood-2.jpg') }),
+                    .9, .5);
+            ground_material.map.repeat.set(50, 50);
+            ground_material.map.wrapS = ground_material.map.wrapT = THREE.RepeatWrapping;
+
+            var ground = new Physijs.BoxMesh(new THREE.BoxGeometry(490, 1, 490), ground_material, 0);
+
+            var borderLeft = new Physijs.BoxMesh(new THREE.BoxGeometry(10, 40, 490), ground_material, 0);
+            borderLeft.position.x = -245;
+            borderLeft.position.y = 15;
+            borderLeft.castShadow = true;
+            borderLeft.receiveShadow =true;
+            ground.add(borderLeft);
+
+            var borderRight = new Physijs.BoxMesh(new THREE.BoxGeometry(10, 40, 490), ground_material, 0);
+            borderRight.position.x = 245;
+            borderRight.position.y = 15;
+            borderRight.castShadow = true;
+            borderRight.receiveShadow =true;
+            ground.add(borderRight);
+
+            var borderBottom = new Physijs.BoxMesh(new THREE.BoxGeometry(490, 40, 10), ground_material, 0);
+            borderBottom.position.z = 245;
+            borderBottom.position.y = 15;
+            borderBottom.castShadow = true;
+            borderBottom.receiveShadow =true;
+            ground.add(borderBottom);
+
+            var borderTop = new Physijs.BoxMesh(new THREE.BoxGeometry(490, 40, 10), ground_material, 0);
+            borderTop.position.z = -245;
+            borderTop.position.y = 15;
+            borderTop.castShadow = true;
+            borderTop.receiveShadow =true;
+            ground.add(borderTop);
+
+            ground.rotation.x = 0.5 * Math.PI;
+            ground.position.z = 20;
+            ground.castShadow = true;
+            ground.receiveShadow =true;
+            ground.name = "wall";
+            scene.add(ground);
+        }
+
         function addTerrain() {
             var terrainTexture = new THREE.ImageUtils.loadTexture("assets/surface_test.png");
             var grassTexture = new THREE.ImageUtils.loadTexture("assets/grasslight-big.jpg");
@@ -216,7 +262,7 @@
         }
 
         //iniclizacija animacije zoge
-        function initBallTween(ball) {
+        /*function initBallTween(ball) {
             var current = {x: 0};
             var update = function () {
                 ball.__dirtyPosition = true;
@@ -234,7 +280,7 @@
             tweenBack.chain(tweenHead);
             tweenHead.chain(tweenBack);
             tweenHead.start();
-        }
+        }*/
 
 
         var projector = new THREE.Projector();
