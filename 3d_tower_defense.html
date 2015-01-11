@@ -38,6 +38,7 @@
         var hemiLight;
         var clock = new THREE.Clock();
         var addTowerBoolean = false;
+        var trackMouse = false;
         var towers = [];
         var enemies = [];
         var img;
@@ -284,6 +285,26 @@
 
 
         var projector = new THREE.Projector();
+        /*function onDocumentMouseDown(event) {
+            event.preventDefault();
+            var vector = new THREE.Vector3(
+                    (event.clientX / window.innerWidth ) * 2 - 1,
+                    -( event.clientY / window.innerHeight ) * 2 + 1,
+                    0.5);
+            projector.unprojectVector(vector, camera);
+            var raycaster = new THREE.Raycaster(camera.position,
+                    vector.sub(camera.position).normalize());
+            var intersects = raycaster.intersectObjects([plane]);
+            if (intersects.length > 0) {
+                if(addTowerBoolean == true) {
+                    var tower = new Tower(intersects[0].point);
+                    towers.push(tower);
+                    //tower.animateTower();
+                    addTowerBoolean = false;
+                }
+            }
+        }*/
+
         function onDocumentMouseDown(event) {
             event.preventDefault();
             var vector = new THREE.Vector3(
@@ -304,6 +325,9 @@
             }
         }
 
+        makeEnemys = setInterval(function(){
+
+        }, 5000);
 
         function animate() {
             render();
